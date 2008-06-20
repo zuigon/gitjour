@@ -6,9 +6,9 @@ require 'gitjour/version'
 Thread.abort_on_exception = true
 
 module Gitjour
-  class GitService < Struct.new(:name, :host, :port, :description)
-    def clone_url
-      "git://#{host}#{port == 9148 ? ":#{port}" : ""}/#{name}"
+  class GitService < Struct.new(:name, :host, :port, :repository, :description)
+    def url
+      "git://#{host}#{port == 9418 ? "" : ":#{port}"}/#{repository}"
     end
   end
 
@@ -30,11 +30,18 @@ module Gitjour
 
       private
 			def list
-				service_list.each do |service|
-          puts "=== #{service.name} on #{service.host}:#{service.port} ==="
-          puts "  git clone #{service.clone_url}"
-          if service.description != '' && service.description !~ /^Unnamed repository/
-            puts "  #{service.description}"
+				service_list.inject({}) do |service_by_repository, service|
+				  service_by_repository[service.repository] ||= []
+				  service_by_repository[service.repository] << service
+				  service_by_repository
+        end.sort_by do |repository, _|
+          repository
+        end.each do |(repository, services)|
+          puts "=== #{repository}"
+          services.sort_by {|s| s.host}.each do |service|
+            puts "\t#{service.host}"
+            puts "\t\tgit clone #{service.url}"
+            puts "\t\tgit remote add #{service.name} #{service.url}"
           end
           puts
         end
@@ -42,24 +49,14 @@ module Gitjour
 
       def serve(path=Dir.pwd, *rest)
         path = File.expand_path(path)
-        name = rest.shift || File.basename(path)
+        name = rest.shift
         port = rest.shift || 9418
-
-        # If the name starts with ^, then don't apply the prefix
-        if name[0] == ?^
-          name = name[1..-1]
-        else
-          prefix = `git config --get gitjour.prefix`.chomp
-          prefix = ENV["USER"] if prefix.empty?
-          name   = [prefix, name].compact.join("-")
-        end
 
         if File.exists?("#{path}/.git")
           announce_repo(path, name, port.to_i)
         else
           Dir["#{path}/*"].each do |dir|
             if File.directory?(dir)
-              name = File.basename(dir)
               announce_repo(dir, name, 9418)
             end
           end
@@ -105,6 +102,7 @@ module Gitjour
             service = GitService.new(reply.name,
                                      resolve_reply.target,
                                      resolve_reply.port,
+                                     resolve_reply.text_record['repository'].to_s,
                                      resolve_reply.text_record['description'].to_s)
             begin
               yield service
@@ -141,9 +139,20 @@ module Gitjour
 
       def announce_repo(path, name, port)
         return unless File.exists?("#{path}/.git")
+        
+        # If the name's been given and it starts with ^, then don't apply the prefix
+        if name && name[0] == ?^
+          name[1..-1]
+        else
+          name = name || File.basename(path)
+          prefix = `git config --get gitjour.prefix`.chomp
+          prefix = ENV["USER"] if prefix.empty?
+          [prefix, name].compact.join("-")
+        end
 
         tr = DNSSD::TextRecord.new
         tr['description'] = File.read("#{path}/.git/description") rescue "a git project"
+        tr['repository'] = name
 
         DNSSD.register(name, "_git._tcp", 'local', port, tr.encode) do |rr|
           puts "Registered #{name} on port #{port}. Starting service."
