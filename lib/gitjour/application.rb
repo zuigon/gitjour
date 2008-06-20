@@ -47,9 +47,7 @@ module Gitjour
         end.each do |(repository, services)|
           puts "=== #{repository}"
           services.sort_by {|s| s.host}.each do |service|
-            puts "\t#{service.host}"
-            puts "\t\tgit clone #{service.url}"
-            puts "\t\tgit remote add #{service.name} #{service.url}"
+            puts "\t#{service.name} #{service.url}"
           end
         else
           display_services(service_list.sort_by{|s| s.name})
