@@ -14,7 +14,7 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
-            list
+            list(*args)
           when "clone"
             clone(*args)
           when "serve"
@@ -27,15 +27,19 @@ module Gitjour
       end
 
       private
-			def list
-				service_list.each do |service|
-          puts "=== #{service.name} on #{service.host}:#{service.port} ==="
-          puts "  gitjour clone #{service.name}"
-          if service.description != '' && service.description !~ /^Unnamed repository/
-            puts "  #{service.description}"
+			def list(order = 'alphabetical', machine = :all, *args)
+			  if order =~ /(mach|serv)/i
+		      server_list = service_list.inject(Hash.new{|h,k| h[k] = []}){|agg, service| agg[service.host] << service; agg }
+	      end
+
+	      if server_list
+	        server_list.each do |machine, services|
+	          puts "Services on #{machine}"
+            display_services(services.sort_by{|s| s.name})
           end
-          puts
-        end
+        else
+          display_services(service_list.sort_by{|s| s.name})
+        end				
 			end
 
       def clone(repository_name, *rest)
@@ -158,10 +162,10 @@ module Gitjour
       end
 
       def service_list
-        list = Set.new
-        discover { |obj| list << obj }
-
-        return list
+        return @list if @list
+        @list = Set.new
+        discover { |obj| @list << obj }
+        return @list
       end
 
       def announce_repo(path, name, port)
@@ -172,6 +176,18 @@ module Gitjour
 
         DNSSD.register(name, "_git._tcp", 'local', port, tr.encode) do |rr|
           puts "Registered #{name} on port #{port}. Starting service."
+        end
+      end
+
+      private 
+      def display_services(services)
+        services.each do |service|
+          # puts "=== #{service.name} on #{service.host}:#{service.port} ==="
+          puts "  gitjour clone #{service.name} # #{service.host}:#{service.port}"
+          # if service.description != '' && service.description !~ /^Unnamed repository/
+          #   puts "  #{service.description}"
+          # end
+          # puts
         end
       end
 
