@@ -19,51 +19,23 @@ module Gitjour
             clone(*args)
           when "serve"
             serve(*args)
-          when "remote"
-            remote(*args)
           else
             help
         end
       end
 
       private
-			def list(order = 'alphabetical', machine = :all, *args)
-			  if order =~ /(mach|serv)/i
-		      server_list = service_list.inject(Hash.new{|h,k| h[k] = []}){|agg, service| agg[service.host] << service; agg }
-	      end
-
-	      if server_list
-	        server_list.each do |machine, services|
-	          puts "Services on #{machine}"
-            display_services(services.sort_by{|s| s.name})
+			def list
+				service_list.each do |service|
+          puts "=== #{service.name} on #{service.host}:#{service.port} ==="
+          puts "  git clone git://#{service.host}:#{service.port}/#{service.name}"
+          if service.description != '' && service.description !~ /^Unnamed repository/
+            puts "  #{service.description}"
           end
         else
           display_services(service_list.sort_by{|s| s.name})
         end				
 			end
-
-      def clone(repository_name, *rest)
-        dir = rest.shift || repository_name
-        if File.exists?(dir)
-          exit_with! "ERROR: Clone directory '#{dir}' already exists."
-        end
-
-        puts "Cloning '#{repository_name}' into directory '#{dir}'..."
-
-        unless service = locate_repo(repository_name)
-          exit_with! "ERROR: Unable to find project named '#{repository_name}'"
-        end
-
-        puts "Connecting to #{service.host}:#{service.port}"
-
-        system "git clone git://#{service.host}:#{service.port}/ #{dir}/"
-      end
-
-      def remote(repository_name, *rest)
-        dir = rest.shift || repository_name
-        service = locate_repo repository_name
-        system "git remote add #{dir} git://#{service.host}:#{service.port}/"
-      end
 
       def serve(path=Dir.pwd, *rest)
         path = File.expand_path(path)
@@ -113,10 +85,6 @@ module Gitjour
         puts "      `git config --get gitjour.prefix` or your username (preference"
         puts "      in that order). If you don't want a prefix, put a ^ on the front"
         puts "      of the name_of_project (the ^ is removed before announcing)."
-        puts
-        puts "  remote <project> [<name>]"
-        puts "      Add a Bonjour remote into your current repository."
-        puts "      Optionally pass name to not use pwd."
         puts
       end
 
