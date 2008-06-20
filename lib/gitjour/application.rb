@@ -8,7 +8,7 @@ Thread.abort_on_exception = true
 module Gitjour
   class GitService < Struct.new(:name, :host, :port, :repository, :description)
     def url
-      "git://#{host}#{port == 9418 ? "" : ":#{port}"}/#{repository}"
+      "git://#{host.gsub(/\.$/,"")}#{port == 9418 ? "" : ":#{port}"}/#{repository}"
     end
   end
 
