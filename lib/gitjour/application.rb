@@ -147,7 +147,7 @@ module Gitjour
 
         tr = DNSSD::TextRecord.new
         tr['description'] = File.read("#{path}/.git/description") rescue "a git project"
-        tr['repository'] = name
+        tr['repository'] = File.basename(path)
 
         DNSSD.register(name, "_git._tcp", 'local', port, tr.encode) do |rr|
           puts "Registered #{name} on port #{port}. Starting service."
