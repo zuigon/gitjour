@@ -142,7 +142,7 @@ module Gitjour
           name = name || File.basename(path)
           prefix = `git config --get gitjour.prefix`.chomp
           prefix = ENV["USER"] if prefix.empty?
-          [prefix, name].compact.join("-")
+          name = [prefix, name].compact.join("-")
         end
 
         tr = DNSSD::TextRecord.new
