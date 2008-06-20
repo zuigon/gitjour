@@ -18,9 +18,13 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
+<<<<<<< HEAD:lib/gitjour/application.rb
             list(*args)
           when "clone"
             clone(*args)
+=======
+            list
+>>>>>>> Remove the clone command:lib/gitjour/application.rb
           when "serve"
             serve(*args)
           when "remote"
@@ -82,9 +86,6 @@ module Gitjour
         puts
         puts "  list"
         puts "      Lists available repositories."
-        puts
-        puts "  clone <project> [<directory>]"
-        puts "      Clone a gitjour served repository."
         puts
         puts "  serve <path_to_project> [<name_of_project>] [<port>] or"
         puts "        <path_to_projects>"
