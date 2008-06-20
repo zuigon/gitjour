@@ -23,6 +23,10 @@ module Gitjour
             clone(*args)
           when "serve"
             serve(*args)
+          when "remote"
+            remote(*args)
+          when "search"
+            search(*args)
           else
             help
         end
@@ -68,6 +72,11 @@ module Gitjour
         end
 
         `git-daemon --verbose --export-all --port=#{port} --base-path=#{path} --base-path-relaxed`
+      end
+      
+      def search(term)
+        matches = service_list.select{|sl| sl.name =~ /#{term}/}
+        puts matches.inspect
       end
 
       def help
