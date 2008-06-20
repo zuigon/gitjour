@@ -18,13 +18,7 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
-<<<<<<< HEAD:lib/gitjour/application.rb
-            list(*args)
-          when "clone"
-            clone(*args)
-=======
             list
->>>>>>> Remove the clone command:lib/gitjour/application.rb
           when "serve"
             serve(*args)
           when "remote"
@@ -37,7 +31,8 @@ module Gitjour
       end
 
       private
-			def list
+      def service_list_display(service_list)
+        lines = []
 				service_list.inject({}) do |service_by_repository, service|
 				  service_by_repository[service.repository] ||= []
 				  service_by_repository[service.repository] << service
@@ -45,13 +40,16 @@ module Gitjour
         end.sort_by do |repository, _|
           repository
         end.each do |(repository, services)|
-          puts "=== #{repository}"
+          lines << "=== #{repository} #{services.length > 1 ? "(#{services.length} copies)" : ""}"
           services.sort_by {|s| s.host}.each do |service|
-            puts "\t#{service.name} #{service.url}"
+            lines << "\t#{service.name} #{service.url}"
           end
-        else
-          display_services(service_list.sort_by{|s| s.name})
-        end				
+        end
+        lines
+      end
+      
+			def list
+			  puts service_list_display(service_list)
 			end
 
       def serve(path=Dir.pwd, *rest)
@@ -73,8 +71,9 @@ module Gitjour
       end
       
       def search(term)
-        matches = service_list.select{|sl| sl.name =~ /#{term}/}
-        puts matches.inspect
+        puts service_list_display(service_list.select do |s|
+          s.search_content.any? {|sc| sc =~ /#{term}/i }
+        end).map {|s| s.gsub(/(#{term})/i, "\033[0;32m\\0\033[0m") }
       end
 
       def help
