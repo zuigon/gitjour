@@ -28,7 +28,7 @@ module Gitjour
 
       private
 			def list
-				service_list.each do |service|
+				service_list.sort_by{|sl| sl.name}.each do |service|
           puts "=== #{service.name} on #{service.host}:#{service.port} ==="
           puts "  gitjour clone #{service.name}"
           if service.description != '' && service.description !~ /^Unnamed repository/
