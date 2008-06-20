@@ -85,6 +85,7 @@ module Gitjour
           Dir["#{path}/*"].each do |dir|
             if File.directory?(dir)
               name = File.basename(dir)
+              name = [prefix, name].compact.join("-")
               announce_repo(dir, name, 9418)
             end
           end
