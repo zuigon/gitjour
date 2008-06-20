@@ -19,8 +19,6 @@ module Gitjour
         case args.shift
           when "list"
             list
-          when "clone"
-            clone(*args)
           when "serve"
             serve(*args)
           else
@@ -72,9 +70,6 @@ module Gitjour
         puts
         puts "  list"
         puts "      Lists available repositories."
-        puts
-        puts "  clone <project> [<directory>]"
-        puts "      Clone a gitjour served repository."
         puts
         puts "  serve <path_to_project> [<name_of_project>] [<port>] or"
         puts "        <path_to_projects>"
