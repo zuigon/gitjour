@@ -10,6 +10,9 @@ module Gitjour
     def url
       "git://#{host.gsub(/\.$/,"")}#{port == 9418 ? "" : ":#{port}"}/#{repository}"
     end
+    def search_content
+      [name, host, repository, description]
+    end
   end
 
   class Application
@@ -21,13 +24,15 @@ module Gitjour
             list
           when "serve"
             serve(*args)
+          when "search"
+            search(*args)
           else
             help
         end
       end
 
       private
-			def list
+      def print_service_list(service_list)
 				service_list.inject({}) do |service_by_repository, service|
 				  service_by_repository[service.repository] ||= []
 				  service_by_repository[service.repository] << service
@@ -35,12 +40,15 @@ module Gitjour
         end.sort_by do |repository, _|
           repository
         end.each do |(repository, services)|
-          puts "=== #{repository}"
+          puts "=== #{repository} #{services.length > 1 ? "(#{services.length} copies)" : ""}"
           services.sort_by {|s| s.host}.each do |service|
             puts "\t#{service.name} #{service.url}"
           end
-          puts
-        end
+        end				
+      end
+      
+			def list
+			  print_service_list service_list
 			end
 
       def serve(path=Dir.pwd, *rest)
@@ -59,6 +67,10 @@ module Gitjour
         end
 
         `git-daemon --verbose --export-all --port=#{port} --base-path=#{path} --base-path-relaxed`
+      end
+      
+      def search(term)
+        print_service_list service_list.select {|s| s.search_content.any? {|sc| sc =~ /#{term}/i }}
       end
 
       def help
@@ -124,10 +136,10 @@ module Gitjour
       end
 
       def service_list
-        list = Set.new
-        discover { |obj| list << obj }
-
-        return list
+        return @list if @list
+        @list = Set.new
+        discover { |obj| @list << obj }
+        return @list
       end
 
       def announce_repo(path, name, port)
@@ -149,6 +161,18 @@ module Gitjour
 
         DNSSD.register(name, "_git._tcp", 'local', port, tr.encode) do |rr|
           puts "Registered #{name} on port #{port}. Starting service."
+        end
+      end
+
+      private 
+      def display_services(services)
+        services.each do |service|
+          # puts "=== #{service.name} on #{service.host}:#{service.port} ==="
+          puts "  gitjour clone #{service.name} # #{service.host}:#{service.port}"
+          # if service.description != '' && service.description !~ /^Unnamed repository/
+          #   puts "  #{service.description}"
+          # end
+          # puts
         end
       end
 
