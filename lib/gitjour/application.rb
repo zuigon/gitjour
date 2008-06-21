@@ -99,18 +99,27 @@ module Gitjour
       end
       
       def clone(name, label = nil, *rest)
-        service = find_service(name)
-
+        services = find_services(name)
         
-        unless service 
-          puts "Cannot find the #{name} git repository"
+        if services.empty? 
+          puts "Cannot find any git repository with the name '#{name}'"
           exit(1)
-        else
+        elsif services.size == 1
           label ||= service.name
+          puts "Cloning #{service.name}"        
+          system "git clone #{service.url} #{label}"
+        else
+          puts "There is more than one repository matching that name. Please be more specific:"
+          number = 0
+          services.each do |service|
+            number += 1
+            puts "#{number}. #{service.name}"
+          end
         end
-        
-        puts "Cloning #{service.name}"        
-        system "git clone #{service.url} #{label}"
+      end
+      
+      def find_services(name)
+        service_list.select { |s| /#{name}/.match(s.name) }
       end
       
       def remote(name, label = nil, *rest)
@@ -209,12 +218,7 @@ module Gitjour
         discover { |obj| @list << obj }
         return @list
       end
-      
-      def find_service(name)
-        service_list.detect do |s|
-          s.name == name
-        end
-      end
+
 
       def announce_repo(path, name, port)
         return unless File.exists?("#{path}/.git")
