@@ -130,6 +130,10 @@ module Gitjour
         service_list.select { |s| /#{name}/.match(s.name) }
       end
       
+      def find_service(name)
+        service_list.detect { |s| /#{name}/.match(s.name) }
+      end
+      
       def remote(name, label = nil, *rest)
         service = find_service(name)
         
