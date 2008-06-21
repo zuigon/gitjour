@@ -75,7 +75,7 @@ module Gitjour
       def search(term)
         puts service_list_display(service_list.select do |s|
           s.search_content.any? {|sc| sc =~ /#{term}/i }
-        end).map {|s| s.gsub(/(#{term})/i, "\033[0;32m\\0\033[0m") }
+        end).map {|s| $stdout.isatty ? s.gsub(/(#{term})/i, "\033[0;32m\\0\033[0m") : s }
       end
 
       def help
