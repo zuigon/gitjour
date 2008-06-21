@@ -2,6 +2,7 @@ require 'rubygems'
 require 'dnssd'
 require 'set'
 require 'socket'
+require 'readline'
 require 'gitjour/version'
 
 Thread.abort_on_exception = true
@@ -115,6 +116,15 @@ module Gitjour
           services.each do |service|
             number += 1
             puts "#{number}. #{service.name}"
+          end
+          puts ">> "
+          repository = Readline::readline("\n").to_i
+          if services[repository-1].nil?
+            puts "You specified an invalid repository"
+            clone(name, label, *rest)
+          else
+            label = services[repository-1].name
+            system "git clone #{services[repository-1].url} #{label}"
           end
         end
       end
