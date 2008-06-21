@@ -96,7 +96,10 @@ module Gitjour
         puts "      of the name_of_project (the ^ is removed before announcing)."
         puts
         puts "  search <string>"
-        puts "                 Searches for your string in the name, host, repository, description, and highlights it in sexy awesomeness (okay, we just colour it in a little)."
+        puts "      Searches for your string in the name, host, repository, description,"
+        puts "      and highlights it in sexy awesomeness (okay, we just colour it in a "
+        puts "      little)."
+        puts ""
       end
 
       def exit_with!(message)
