@@ -128,6 +128,7 @@ module Gitjour
         puts
         puts "  list"
         puts "      Lists available repositories."
+        puts "      Specify --local to see yours too."
         puts
         puts "  serve <path_to_project> [<name_of_project>] [<port>] or"
         puts "        <path_to_projects>"
