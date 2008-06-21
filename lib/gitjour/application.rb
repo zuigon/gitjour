@@ -19,7 +19,7 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
-            list(args.first, *args)
+            list(*args)
           when "serve"
             serve(*args)
           when "remote"
@@ -56,12 +56,8 @@ module Gitjour
         lines
       end  
       
-      def list(name, *rest)
-        if name && name != "--local"
-          services = service_list.select{|service| service.search_content.any?{|content| content =~ %r[#{name}]}}
-        else
-          services = service_list
-        end
+      def list(*rest)
+        services = service_list
         puts service_list_display(services, *rest)
       end
 
