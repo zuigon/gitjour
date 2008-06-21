@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
-# require 'rubygems'
-# require 'gitjour'
+require 'rubygems'
+require 'gitjour'
+require 'socket'
 require File.dirname(__FILE__) + "/../lib/gitjour"
 
 trap "INT" do

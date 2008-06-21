@@ -21,7 +21,7 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
-            list
+            list(*args)
           when "serve"
             serve(*args)
           when "search"
@@ -37,7 +37,7 @@ module Gitjour
 
       private      
       
-      def service_list_display(service_list)
+      def service_list_display(service_list, *args)
         lines = []
 				service_list.inject({}) do |service_by_repository, service|
 				  service_by_repository[service.repository] ||= []
@@ -46,6 +46,8 @@ module Gitjour
         end.sort_by do |repository, _|
           repository
         end.each do |(repository, services)|
+          local_services = services.select { |s| puts s.host; s.host == Socket.gethostname + "." }
+          services -= local_services unless args.include?("--local")
           lines << "=== #{repository} #{services.length > 1 ? "(#{services.length} copies)" : ""}"
           services.sort_by {|s| s.host}.each do |service|
             lines << "\t#{service.name} #{service.url}"
@@ -54,8 +56,8 @@ module Gitjour
         lines
       end
       
-			def list
-			  puts service_list_display(service_list)
+			def list(*args)
+			  puts service_list_display(service_list, *args)
 			end
 
       def serve(path=Dir.pwd, *rest)
