@@ -84,8 +84,9 @@ module Gitjour
         end).map {|s| s.gsub(/(#{term})/i, "\033[0;32m\\0\033[0m") }
       end
       
-      def clone(name, *rest)
+      def clone(name, label = nil, *rest)
         service = find_service(name)
+        label ||= service.name
         
         unless service 
           puts "Cannot find the #{name} git repository"
@@ -93,7 +94,7 @@ module Gitjour
         end
         
         puts "Cloning #{service.name}"        
-        system "git clone #{service.url} #{service.name}"
+        system "git clone #{service.url} #{label}"
       end
       
       def remote(name, label = nil, *rest)
@@ -121,6 +122,13 @@ module Gitjour
         puts "  serve <path_to_project> [<name_of_project>] [<port>] or"
         puts "        <path_to_projects>"
         puts "      Serve up the current directory or projects via gitjour."
+        puts
+        puts "  clone <name_of_project> [<directory name>]"
+        puts "      Clones the project into the chosen directory"
+        puts
+        puts "  remote <name_of_project> [<remote label>]"
+        puts "      Adds a remote to the current git repository.  Optionally provide a label"
+        puts "      to the remote repository."
         puts
         puts "      The name of your project is automatically prefixed with"
         puts "      `git config --get gitjour.prefix` or your username (preference"
