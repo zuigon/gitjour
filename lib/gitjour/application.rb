@@ -104,6 +104,7 @@ module Gitjour
           puts "Cannot find any git repository with the name '#{name}'"
           exit(1)
         elsif services.size == 1
+          service = services.first
           label ||= service.name
           puts "Cloning #{service.name}"        
           system "git clone #{service.url} #{label}"
