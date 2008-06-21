@@ -1,6 +1,6 @@
-README
+== gitjour
 
-DEVELOPMENT
+== Testing
 
 How to test from the console:
 
