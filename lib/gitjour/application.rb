@@ -115,8 +115,7 @@ module Gitjour
             number += 1
             puts "#{number}. #{service.name}"
           end
-          puts ">> "
-          repository = Readline::readline("\n").to_i
+          repository = Readline::readline(">> ").to_i
           if services[repository-1].nil?
             puts "You specified an invalid repository"
             clone(name, label, *rest)
