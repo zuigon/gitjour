@@ -142,7 +142,7 @@ module Gitjour
         puts
         puts "  list [search]"
         puts "      Lists available repositories."
-        puts "      search will search for any repositories that may match the content"
+        puts "      Specify --local to see yours too."
         puts
         puts "  serve <path_to_project> [<name_of_project>] [<port>] or"
         puts "        <path_to_projects>"
@@ -164,7 +164,7 @@ module Gitjour
         puts "      Searches for your string in the name, host, repository, description,"
         puts "      and highlights it in sexy awesomeness (okay, we just colour it in a "
         puts "      little)."
-        puts ""
+        puts
       end
 
       def exit_with!(message)
