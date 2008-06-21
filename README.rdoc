@@ -1,0 +1,8 @@
+== gitjour
+
+== Testing
+
+How to test from the console:
+
+irb -r 'lib/gitjour/application'
+> Gitjour::Application.run "list"
