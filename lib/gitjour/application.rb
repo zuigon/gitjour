@@ -12,7 +12,7 @@ module Gitjour
       "git://#{host.gsub(/\.$/,"")}#{port == 9418 ? "" : ":#{port}"}/#{path}"
     end
     def search_content
-      [name, host, repository, description]
+      [name, host, repository, description, prefix]
     end
   end
 
@@ -22,7 +22,7 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
-            list(*args)
+            list
           when "serve"
             serve(*args)
           when "search"
@@ -57,9 +57,8 @@ module Gitjour
         lines
       end  
       
-      def list(*rest)
-        services = service_list
-        puts service_list_display(services, *rest)
+      def list
+        puts service_list_display(service_list)
       end
 
       def serve(path=Dir.pwd, *rest)
@@ -141,9 +140,8 @@ module Gitjour
         puts "Serve up and use git repositories via Bonjour/DNSSD."
         puts "\nUsage: gitjour <command> [args]"
         puts
-        puts "  list [search]"
+        puts "  list"
         puts "      Lists available repositories."
-        puts "      Specify --local to see yours too."
         puts
         puts "  serve <path_to_project> [<name_of_project>] [<port>] or"
         puts "        <path_to_projects>"
