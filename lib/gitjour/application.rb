@@ -6,7 +6,7 @@ require 'gitjour/version'
 Thread.abort_on_exception = true
 
 module Gitjour
-  class GitService < Struct.new(:name, :host, :port, :repository, :path, :description)
+  class GitService < Struct.new(:name, :host, :port, :repository, :path, :description, :prefix)
     def url
       "git://#{host.gsub(/\.$/,"")}#{port == 9418 ? "" : ":#{port}"}/#{path}"
     end
@@ -25,12 +25,17 @@ module Gitjour
             remote(*args)
           when "search"
             search(*args)
+          when "clone"
+            clone(*args)
+          when "remote"
+            remote(*args)
           else
             help
         end
       end
 
-      private
+      private      
+      
       def service_list_display(service_list)
         lines = []
 				service_list.inject({}) do |service_by_repository, service|
@@ -77,6 +82,32 @@ module Gitjour
           s.search_content.any? {|sc| sc =~ /#{term}/i }
         end).map {|s| $stdout.isatty ? s.gsub(/(#{term})/i, "\033[0;32m\\0\033[0m") : s }
       end
+      
+      def clone(name, *rest)
+        service = find_service(name)
+        
+        unless service 
+          puts "Cannot find the #{name} git repository"
+          exit(1)
+        end
+        
+        puts "Cloning #{service.name}"        
+        system "git clone #{service.url} #{service.name}"
+      end
+      
+      def remote(name, label = nil, *rest)
+        service = find_service(name)
+        
+        unless service 
+          puts "Cannot find the #{name} git repository"
+          exit(1)
+        end
+        
+        label ||= service.prefix.empty? ? name : service.prefix
+        
+        puts "Adding remote 'git remote add #{label} #{service.url}'"
+        system "git remote add #{label} #{service.url}"
+      end
 
       def help
         puts "Gitjour #{Gitjour::VERSION::STRING}"
@@ -119,7 +150,8 @@ module Gitjour
                                      resolve_reply.port,
                                      resolve_reply.text_record['repository'].to_s,
                                      resolve_reply.text_record['path'].to_s,
-                                     resolve_reply.text_record['description'].to_s)
+                                     resolve_reply.text_record['description'].to_s,
+                                     resolve_reply.text_record['prefix'].to_s)
             begin
               yield service
             rescue Done
@@ -152,6 +184,12 @@ module Gitjour
         discover { |obj| @list << obj }
         return @list
       end
+      
+      def find_service(name)
+        service_list.detect do |s|
+          s.name == name
+        end
+      end
 
       def announce_repo(path, name, port)
         return unless File.exists?("#{path}/.git")
@@ -170,6 +208,7 @@ module Gitjour
         tr['description'] = File.read("#{path}/.git/description") rescue "a git project"
         tr['repository']  = File.basename(path)
         tr['path']        = @serving_multiple ? File.basename(path) : ""
+        tr['user']        = prefix
 
         DNSSD.register(name, "_git._tcp", 'local', port, tr.encode) do |rr|
           puts "Registered #{name} on port #{port}. Starting service."
