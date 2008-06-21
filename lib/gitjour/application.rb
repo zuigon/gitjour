@@ -208,7 +208,7 @@ module Gitjour
         tr['description'] = File.read("#{path}/.git/description") rescue "a git project"
         tr['repository']  = File.basename(path)
         tr['path']        = @serving_multiple ? File.basename(path) : ""
-        tr['user']        = prefix
+        tr['prefix']        = prefix
 
         DNSSD.register(name, "_git._tcp", 'local', port, tr.encode) do |rr|
           puts "Registered #{name} on port #{port}. Starting service."
