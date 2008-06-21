@@ -92,8 +92,9 @@ module Gitjour
         end).map {|s| $stdout.isatty ? s.gsub(/(#{term})/i, "\033[0;32m\\0\033[0m") : s }
       end
       
-      def clone(name, *rest)
+      def clone(name, label = nil, *rest)
         service = find_service(name)
+        label ||= service.name
         
         unless service 
           puts "Cannot find the #{name} git repository"
@@ -101,7 +102,7 @@ module Gitjour
         end
         
         puts "Cloning #{service.name}"        
-        system "git clone #{service.url} #{service.name}"
+        system "git clone #{service.url} #{label}"
       end
       
       def remote(name, label = nil, *rest)
