@@ -6,9 +6,9 @@ require 'gitjour/version'
 Thread.abort_on_exception = true
 
 module Gitjour
-  class GitService < Struct.new(:name, :host, :port, :repository, :description)
+  class GitService < Struct.new(:name, :host, :port, :repository, :path, :description)
     def url
-      "git://#{host.gsub(/\.$/,"")}#{port == 9418 ? "" : ":#{port}"}/#{repository}"
+      "git://#{host.gsub(/\.$/,"")}#{port == 9418 ? "" : ":#{port}"}/#{path}"
     end
   end
 
@@ -58,9 +58,11 @@ module Gitjour
         port = rest.shift || 9418
 
         if File.exists?("#{path}/.git")
+          @serving_multiple = false
           announce_repo(path, name, port.to_i)
         else
           Dir["#{path}/*"].each do |dir|
+            @serving_multiple = true
             if File.directory?(dir)
               announce_repo(dir, name, 9418)
             end
@@ -113,6 +115,7 @@ module Gitjour
                                      resolve_reply.target,
                                      resolve_reply.port,
                                      resolve_reply.text_record['repository'].to_s,
+                                     resolve_reply.text_record['path'].to_s,
                                      resolve_reply.text_record['description'].to_s)
             begin
               yield service
@@ -162,7 +165,8 @@ module Gitjour
 
         tr = DNSSD::TextRecord.new
         tr['description'] = File.read("#{path}/.git/description") rescue "a git project"
-        tr['repository'] = File.basename(path)
+        tr['repository']  = File.basename(path)
+        tr['path']        = @serving_multiple ? File.basename(path) : ""
 
         DNSSD.register(name, "_git._tcp", 'local', port, tr.encode) do |rr|
           puts "Registered #{name} on port #{port}. Starting service."
