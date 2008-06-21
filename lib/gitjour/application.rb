@@ -21,7 +21,7 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
-            list
+            list(*args)
           when "serve"
             serve(*args)
           when "search"
@@ -54,8 +54,13 @@ module Gitjour
         lines
       end
       
-      def list
-        puts service_list_display(service_list)
+      def list(name, *rest)
+        if name
+          services = service_list.select{|service| service.search_content.any?{|content| content =~ %r[#{name}]}}
+        else
+          services = service_list
+        end
+        puts service_list_display(services)
       end
 
       def serve(path=Dir.pwd, *rest)
@@ -125,8 +130,9 @@ module Gitjour
         puts "Serve up and use git repositories via Bonjour/DNSSD."
         puts "\nUsage: gitjour <command> [args]"
         puts
-        puts "  list"
+        puts "  list [search]"
         puts "      Lists available repositories."
+        puts "      search will search for any repositories that may match the content"
         puts
         puts "  serve <path_to_project> [<name_of_project>] [<port>] or"
         puts "        <path_to_projects>"
