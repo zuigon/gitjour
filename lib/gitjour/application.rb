@@ -34,10 +34,10 @@ module Gitjour
       private
       def service_list_display(service_list)
         lines = []
-				service_list.inject({}) do |service_by_repository, service|
-				  service_by_repository[service.repository] ||= []
-				  service_by_repository[service.repository] << service
-				  service_by_repository
+        service_list.inject({}) do |service_by_repository, service|
+          service_by_repository[service.repository] ||= []
+          service_by_repository[service.repository] << service
+          service_by_repository
         end.sort_by do |repository, _|
           repository
         end.each do |(repository, services)|
@@ -49,9 +49,9 @@ module Gitjour
         lines
       end
       
-			def list
-			  puts service_list_display(service_list)
-			end
+      def list
+        puts service_list_display(service_list)
+      end
 
       def serve(path=Dir.pwd, *rest)
         path = File.expand_path(path)
@@ -70,9 +70,18 @@ module Gitjour
           end
         end
 
-        `git-daemon --verbose --export-all --port=#{port} --base-path=#{path} --base-path-relaxed`
+        child = nil # Avoid races
+        (1..15).each do |signal|
+          Signal.trap(signal) do
+            Process.kill(signal, child) if child
+          end
+        end
+        child = fork {
+          exec "git-daemon --verbose --export-all --port=#{port} --base-path=#{path} --base-path-relaxed"
+        }
+        Process.wait(child)
       end
-      
+
       def search(term)
         puts service_list_display(service_list.select do |s|
           s.search_content.any? {|sc| sc =~ /#{term}/i }
