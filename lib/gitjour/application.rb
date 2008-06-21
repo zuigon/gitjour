@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'dnssd'
 require 'set'
+require 'socket'
 require 'gitjour/version'
 
 Thread.abort_on_exception = true
@@ -21,7 +22,7 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
-            list(*args)
+            list(args.first, *args)
           when "serve"
             serve(*args)
           when "search"
@@ -37,7 +38,7 @@ module Gitjour
 
       private      
       
-      def service_list_display(service_list, *args)
+      def service_list_display(service_list, *rest)
         lines = []
         service_list.inject({}) do |service_by_repository, service|
           service_by_repository[service.repository] ||= []
@@ -46,19 +47,24 @@ module Gitjour
         end.sort_by do |repository, _|
           repository
         end.each do |(repository, services)|
-          local_services = services.select { |s| puts s.host; s.host == Socket.gethostname + "." }
-          services -= local_services unless args.include?("--local")
+          local_services = services.select { |s| s.host == Socket.gethostname + "." }
+          services -= local_services unless rest.include?("--local")
           lines << "=== #{repository} #{services.length > 1 ? "(#{services.length} copies)" : ""}"
           services.sort_by {|s| s.host}.each do |service|
             lines << "\t#{service.name} #{service.url}"
           end
         end
         lines
-      end
+      end  
       
-			def list(*args)
-			  puts service_list_display(service_list, *args)
-			end
+      def list(name, *rest)
+        if name && name != "--local"
+          services = service_list.select{|service| service.search_content.any?{|content| content =~ %r[#{name}]}}
+        else
+          services = service_list
+        end
+        puts service_list_display(services, *rest)
+      end
 
       def serve(path=Dir.pwd, *rest)
         path = File.expand_path(path)
@@ -97,11 +103,13 @@ module Gitjour
       
       def clone(name, label = nil, *rest)
         service = find_service(name)
-        label ||= service.name
+
         
         unless service 
           puts "Cannot find the #{name} git repository"
           exit(1)
+        else
+          label ||= service.name
         end
         
         puts "Cloning #{service.name}"        
@@ -127,7 +135,7 @@ module Gitjour
         puts "Serve up and use git repositories via Bonjour/DNSSD."
         puts "\nUsage: gitjour <command> [args]"
         puts
-        puts "  list"
+        puts "  list [search]"
         puts "      Lists available repositories."
         puts "      Specify --local to see yours too."
         puts
@@ -151,7 +159,7 @@ module Gitjour
         puts "      Searches for your string in the name, host, repository, description,"
         puts "      and highlights it in sexy awesomeness (okay, we just colour it in a "
         puts "      little)."
-        puts ""
+        puts
       end
 
       def exit_with!(message)
