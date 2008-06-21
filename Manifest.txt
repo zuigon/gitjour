@@ -1,8 +1,10 @@
 History.txt
 Manifest.txt
-README.txt
+README.rdoc
 Rakefile
 bin/gitjour
+config/hoe.rb
+config/requirements.rb
 lib/gitjour.rb
 test/test_gitjour.rb
 test/test_helper.rb

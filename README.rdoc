@@ -1,4 +1,4 @@
-= gitjour
+== gitjour
 
 * http://github.com/chad/gitjour
 
