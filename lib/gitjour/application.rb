@@ -131,6 +131,13 @@ module Gitjour
         puts "        <path_to_projects>"
         puts "      Serve up the current directory or projects via gitjour."
         puts
+        puts "  clone <name_of_project> [<directory name>]"
+        puts "      Clones the project into the chosen directory"
+        puts
+        puts "  remote <name_of_project> [<remote label>]"
+        puts "      Adds a remote to the current git repository.  Optionally provide a label"
+        puts "      to the remote repository."
+        puts
         puts "      The name of your project is automatically prefixed with"
         puts "      `git config --get gitjour.prefix` or your username (preference"
         puts "      in that order). If you don't want a prefix, put a ^ on the front"
