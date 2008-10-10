@@ -23,9 +23,15 @@ module Gitjour
       def run(*args)
         case args.shift
           when "list"
-            list
+            list(*args)
           when "serve"
             serve(*args)
+          when "search"
+            search(*args)
+          when "clone"
+            clone(*args)
+          when "remote"
+            remote(*args)
           when "search"
             search(*args)
           when "clone"
@@ -40,6 +46,7 @@ module Gitjour
       private      
       
       def service_list_display(service_list, *rest)
+        @total_services = 0
         lines = []
         service_list.inject({}) do |service_by_repository, service|
           service_by_repository[service.repository] ||= []
@@ -50,7 +57,8 @@ module Gitjour
         end.each do |(repository, services)|
           local_services = services.select { |s| s.host == Socket.gethostname + "." }
           services -= local_services unless rest.include?("--local")
-          lines << "=== #{repository} #{services.length > 1 ? "(#{services.length} copies)" : ""}"
+          @total_services += services.size
+          lines << "=== #{repository} #{services.length > 1 ? "(#{services.length} copies)" : ""}" if services.size >= 1
           services.sort_by {|s| s.host}.each do |service|
             lines << "\t#{service.name} #{service.url}"
           end
@@ -58,11 +66,13 @@ module Gitjour
         lines
       end  
       
-      def list
-        puts service_list_display(service_list)
+      def list(*rest)
+        puts service_list_display(service_list, *rest)
+        puts "#{@total_services} repositories shown." 
       end
 
       def serve(path=Dir.pwd, *rest)
+        puts "SERVING!"
         path = File.expand_path(path)
         name = rest.shift
         port = rest.shift || 9418
@@ -78,6 +88,19 @@ module Gitjour
             end
           end
         end
+        
+
+        child = nil # Avoid races
+        (1..15).each do |signal|
+          Signal.trap(signal) do
+            Process.kill(signal, child) if child
+          end
+        end
+        child = fork {
+          exec "git-daemon --verbose --export-all --port=#{port} --base-path=\"#{path}\" --base-path-relaxed"
+        }
+        Process.wait(child)
+      end
 
         child = nil # Avoid races
         (1..15).each do |signal|
@@ -90,7 +113,7 @@ module Gitjour
         }
         Process.wait(child)
       end
-
+      
       def search(term)
         puts service_list_display(service_list.select do |s|
           s.search_content.any? {|sc| sc =~ /#{term}/i }
@@ -106,8 +129,8 @@ module Gitjour
         elsif services.size == 1
           service = services.first
           label ||= service.name
-          puts "Cloning #{service.name}"        
-          system "git clone #{service.url} #{label}"
+          puts "Cloning #{service.name}"
+          system "git clone \"#{service.url}\" \"#{label}\""
         else
           puts "There is more than one repository matching that name. Please be more specific:"
           number = 0
@@ -121,17 +144,17 @@ module Gitjour
             clone(name, label, *rest)
           else
             label = services[repository-1].name
-            system "git clone #{services[repository-1].url} #{label}"
+            system "git clone \"#{services[repository-1].url}\" \"#{label}\""
           end
         end
       end
       
       def find_services(name)
-        service_list.select { |s| /#{name}/.match(s.name) }
+        service_list.select { |s| /#{name}/.match(s.name.downcase) }
       end
       
       def find_service(name)
-        service_list.detect { |s| /#{name}/.match(s.name) }
+        service_list.detect { |s| /#{name}/.match(s.name.downcase) }
       end
       
       def remote(name, label = nil, *rest)
@@ -176,7 +199,7 @@ module Gitjour
         puts "      Searches for your string in the name, host, repository, description,"
         puts "      and highlights it in sexy awesomeness (okay, we just colour it in a "
         puts "      little)."
-        puts
+        puts ""
       end
 
       def exit_with!(message)
