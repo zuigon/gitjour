@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{gitjour}
   s.rubygems_version = %q{1.2.0}
-  s.summary = "Sharing Git repos over DNSSD"
+  s.summary = %q{Serve git and advertise with bonjour}
   s.test_files = ["test/test_gitjour.rb", "test/test_helper.rb"]
 
   if s.respond_to? :specification_version then
