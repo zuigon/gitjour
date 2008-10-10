@@ -102,18 +102,6 @@ module Gitjour
         Process.wait(child)
       end
 
-        child = nil # Avoid races
-        (1..15).each do |signal|
-          Signal.trap(signal) do
-            Process.kill(signal, child) if child
-          end
-        end
-        child = fork {
-          exec "git-daemon --verbose --export-all --port=#{port} --base-path=#{path} --base-path-relaxed"
-        }
-        Process.wait(child)
-      end
-      
       def search(term)
         puts service_list_display(service_list.select do |s|
           s.search_content.any? {|sc| sc =~ /#{term}/i }
