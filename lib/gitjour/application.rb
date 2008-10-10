@@ -58,9 +58,9 @@ module Gitjour
           local_services = services.select { |s| s.host == Socket.gethostname + "." }
           services -= local_services unless rest.include?("--local")
           @total_services += services.size
-          lines << "=== #{repository} #{services.length > 1 ? "(#{services.length} copies)" : ""}" if services.size >= 1
+          lines << "=== #{repository.downcase} #{services.length > 1 ? "(#{services.length} copies)" : ""}" if services.size >= 1
           services.sort_by {|s| s.host}.each do |service|
-            lines << "\t#{service.name} #{service.url}"
+            lines << "\t#{service.name.downcase} #{service.url}"
           end
         end
         lines
