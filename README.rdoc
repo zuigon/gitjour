@@ -17,6 +17,11 @@ Automates DNSSD-powered serving and cloning of git repositories.
 
   % gitjour serve project_dir [name_to_advertise_as]
   % gitjour list
+  % gitjour search <string>
+  % gitjour clone
+  % gitjour remote
+  
+  Type 'gitjour' for more details
 
 == REQUIREMENTS:
 
