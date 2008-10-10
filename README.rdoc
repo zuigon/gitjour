@@ -2,7 +2,8 @@
 
 * http://github.com/chad/gitjour
 
-* You're looking at the massively refactored version from Railscamp 3, hopefully we'll get it merged in with Chad Fowler's soon: http://github.com/lachlanhardy/gitjour
+* You're looking at the massively refactored version from Railscamp 3, hopefully we'll get it merged in with Chad Fowler's soon.
+* http://github.com/lachlanhardy/gitjour
 
 == DESCRIPTION:
 
